@@ -1,0 +1,92 @@
+<template>
+  <div class="app-page-toolbar">
+    <router-link :to="{ path: `/notice/${record.id}/edit` }" v-if="record && hasPermissionToEdit">
+      <el-button icon="el-icon-fa-edit" type="primary" round>
+        <app-i18n code="common.edit"></app-i18n>
+      </el-button>
+    </router-link>
+
+    <el-button
+      :disabled="destroyLoading"
+      @click="doDestroyWithConfirm"
+      icon="el-icon-fa-trash"
+      type="danger"
+      round
+      v-if="record && hasPermissionToDestroy"
+    >
+      <app-i18n code="common.destroy"></app-i18n>
+    </el-button>
+
+    <router-link
+      :to="{ path: '/audit-logs', query: { entityId: record.id } }"
+      v-if="record && hasPermissionToAuditLogs"
+    >
+      <el-button icon="el-icon-fa-history" round>
+        <app-i18n code="auditLog.menu"></app-i18n>
+      </el-button>
+    </router-link>
+  </div>
+</template>
+
+<script>
+import { NoticePermissions } from '@/modules/notice/notice-permissions';
+import { AuditLogPermissions } from '@/modules/audit-log/audit-log-permissions';
+import { mapGetters, mapActions } from 'vuex';
+import { i18n } from '@/i18n';
+
+export default {
+  name: 'app-notice-view-toolbar',
+
+  computed: {
+    ...mapGetters({
+      currentUser: 'auth/currentUser',
+      record: 'notice/view/record',
+      loading: 'notice/view/loading',
+      destroyLoading: 'notice/destroy/loading',
+    }),
+
+    hasPermissionToEdit() {
+      return new NoticePermissions(this.currentUser).edit;
+    },
+
+    hasPermissionToImport() {
+      return new NoticePermissions(this.currentUser).import;
+    },
+
+    hasPermissionToDestroy() {
+      return new NoticePermissions(this.currentUser).destroy;
+    },
+
+    hasPermissionToAuditLogs() {
+      return new AuditLogPermissions(this.currentUser).read;
+    },
+  },
+
+  methods: {
+    ...mapActions({
+      doDestroy: 'notice/destroy/doDestroy',
+    }),
+
+    async doDestroyWithConfirm() {
+      try {
+        await this.$confirm(
+          i18n('common.areYouSure'),
+          i18n('common.confirm'),
+          {
+            confirmButtonText: i18n('common.yes'),
+            cancelButtonText: i18n('common.no'),
+            type: 'warning',
+          },
+        );
+
+        return this.doDestroy(this.record.id);
+      } catch (error) {
+        // no
+      }
+    },
+  },
+};
+</script>
+
+<style>
+</style>

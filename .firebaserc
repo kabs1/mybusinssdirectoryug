@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "development": "ntuma-business-test",
+    "production": "ntuma-business-test"
+  }
+}
